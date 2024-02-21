@@ -2,44 +2,56 @@
 
 testSuccess() {
     if [[ $1 -eq 0 ]]; then
-        nohup nautilus ./ &
-        echo "Done"
+        nautilus ./"$2"* >/dev/null 2>/dev/null &
+        echo "[Rip] Done"
     else
-        echo "Something went wrong"
+        echo "[Rip] Something went wrong"
     fi
 }
 
 cd ~/Videos/
 
 if [[ $1 == *"www.youtube.com"* ]] || [[ $1 == *"youtu.be"* ]]; then
-    echo "Downloading Youtube Video..."
+    echo "[Rip] Youtube Video"
+    echo "[Rip] Grabbing Title"
+    title=$(yt-dlp "$1" --skip-download --print title)
+    echo "[Rip] Downloading: $title..."
     yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" "$1"
-    testSuccess $?
+    testSuccess $? $title
     exit
 fi
 
 if [[ $1 == *"twitter.com"* ]]; then
-    echo "Downloading Twitter Video..."
+    echo "[Rip] Twitter Video"
+    echo "[Rip] Grabbing Title"
+    title=$(yt-dlp "$1" --skip-download --print title)
+    echo "[Rip] Downloading: $title..."
     yt-dlp "$1"
-    testSuccess $?
+    testSuccess $? $title
     exit
 fi
 
 if [[ $1 == *"www.reddit.com"* ]] || [[ $1 == *"redd.it"* ]]; then
-    echo "Downloading Reddit Video..."
+    echo "[Rip] Reddit Video "
+    echo "[Rip] Grabbing Title"
+    title=$(yt-dlp "$1" --skip-download --print title)
+    echo "[Rip] Downloading: $title..."
     yt-dlp "$1"
-    testSuccess $?
+    testSuccess $? $title
     exit
 fi
 
 echo "Website is unknown"
 read -p "Attempt to download anyways? [Y/n] " response
 
-case $response in [yY][eE][sS]|[yY]|[jJ]|'') 
-    
-    echo "Attempting To Downloading Video..."
+case $response in [yY][eE][sS]|[yY]|[jJ]|'')
+
+    echo "[Rip] Generic Video "
+    echo "[Rip] Grabbing Title"
+    title=$(yt-dlp "$1" --skip-download --print title)
+    echo "[Rip] Attempting To Download: $title..."
     yt-dlp "$1"
-    testSuccess $?
+    testSuccess $? $title
     ;;
     *)
     echo "Nothing to do"
