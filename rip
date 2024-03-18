@@ -32,12 +32,13 @@ parseLink() {
 
 loadConfig() {
     file="~/.config/video-ripper/$fullDomain.config"
-    if test -f "$FILE"; then
+    if test -f "$file"; then
         echo "[Rip] Loading config for $fullDomain"
+        config="$(head $file)"
     else
         echo "[Rip] No config for $fullDomain, loading generic config"
+        config="bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
     fi
-    config="bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
 }
 
 downloadVideo() {
