@@ -1,5 +1,56 @@
 #!/bin/bash
 
+getFolder() {
+    if [[ "$1" == "mp3" ]]; then
+        link=$2
+        echo "[Rip] mp3 mode"
+        args="-x --audio-format mp3"
+        cd ~/Music/
+    else
+        link=$1
+        args=""
+        cd ~/Videos/
+    fi
+}
+
+parseLink() {
+    fullDomain=$(\
+        echo "$link" |\
+        sed -E 's/https?:\/\/([^\/]+).*/\1/'\
+    )
+    noSubDomain=$(\
+        echo "$fullDomain." |\
+        awk -F"." -v end="$(($(echo "$fullDomain." | awk -F"." '{print NF}')-1))" '{print $(end-1)"."$end}'\
+    )
+    local tmp=$(echo "$noSubDomain" | awk -F"." '{print $1}')
+    websiteName="${tmp^}"
+    if [[ "$websiteName" == "" ]]; then
+        websiteName="Generic"
+    fi
+    echo "[Rip] $websiteName Video"
+}
+
+loadConfig() {
+    file="~/.config/video-ripper/$fullDomain.config"
+    if test -f "$FILE"; then
+        echo "[Rip] Loading config for $fullDomain"
+    else
+        echo "[Rip] No config for $fullDomain, loading generic config"
+    fi
+    config="bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
+}
+
+downloadVideo() {
+    mkdir ./$websiteName 2>/dev/null
+    cd ./$websiteName
+    echo "[Rip] Grabbing Title"
+    local title=$(yt-dlp "$link" --skip-download --print title)
+    echo "[Rip] Downloading: $title..."
+    yt-dlp $args -f "$config" "$link"
+    testSuccess $? "$title"
+    exit
+}
+
 testSuccess() {
     if [[ $1 -eq 0 ]]; then
         nautilus ./"$2"* >/dev/null 2>/dev/null &
@@ -9,65 +60,8 @@ testSuccess() {
     fi
 }
 
-if [[ "$1" == "mp3" ]]; then
-    link=$2
-    args="-x --audio-format mp3"
-    cd ~/Music/
-else
-    link=$1
-    args=""
-    cd ~/Videos/
-fi
-
-if [[ $link == *"www.youtube.com"* ]] || [[ $link == *"youtu.be"* ]]; then
-    mkdir ./Youtube 2>/dev/null
-    cd ./Youtube
-    echo "[Rip] Youtube Video"
-    echo "[Rip] Grabbing Title"
-    title=$(yt-dlp "$link" --skip-download --print title)
-    echo "[Rip] Downloading: $title..."
-    yt-dlp $args -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" "$link"
-    testSuccess $? "$title"
-    exit
-fi
-
-if [[ $link == *"twitter.com"* ]]; then
-    mkdir ./Twitter 2>/dev/null
-    cd ./Twitter
-    echo "[Rip] Twitter Video"
-    echo "[Rip] Grabbing Title"
-    title=$(yt-dlp "$link" --skip-download --print title)
-    echo "[Rip] Downloading: $title..."
-    yt-dlp $args "$link"
-    testSuccess $? "$title"
-    exit
-fi
-
-if [[ $link == *"www.reddit.com"* ]] || [[ $link == *"redd.it"* ]]; then
-    mkdir ./Reddit 2>/dev/null
-    cd ./Reddit
-    echo "[Rip] Reddit Video "
-    echo "[Rip] Grabbing Title"
-    title=$(yt-dlp "$link" --skip-download --print title)
-    echo "[Rip] Downloading: $title..."
-    yt-dlp $args "$link"
-    testSuccess $? "$title"
-    exit
-fi
-
-echo "Website is unknown"
-read -p "Attempt to download anyways? [Y/n] " response
-
-case $response in [yY][eE][sS]|[yY]|[jJ]|'')
-
-    echo "[Rip] Generic Video "
-    echo "[Rip] Grabbing Title"
-    title=$(yt-dlp "$link" --skip-download --print title)
-    echo "[Rip] Attempting To Download: $title..."
-    yt-dlp $args "$link"
-    testSuccess $? "$title"
-    ;;
-    *)
-    echo "Nothing to do"
-    ;;
-esac
+# main
+getFolder $1 $2
+parseLink
+loadConfig
+downloadVideo

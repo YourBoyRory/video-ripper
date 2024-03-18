@@ -1,0 +1,15 @@
+#!/bin/bash
+
+url="https://www.example.com/page"
+baseDomain=$(\
+    echo "$url" |\
+    sed -E 's/https?:\/\/([^\/]+).*/\1/'\
+)
+
+subDomain=$(\
+    echo "$baseDomain." |\
+    awk -F"." -v end="$(($(echo "$baseDomain." | awk -F"." '{print NF}')-1))" '{print $(end-1)"."$end}'\
+)
+
+echo "$baseDomain"
+echo "$subDomain"
