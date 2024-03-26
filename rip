@@ -54,7 +54,8 @@ downloadVideo() {
 
 testSuccess() {
     if [[ $1 -eq 0 ]]; then
-        nautilus ./"$2"* >/dev/null 2>/dev/null &
+        local dir=$(ls $(pwd)/"$2"*)
+        dbus-send --session --dest=org.freedesktop.FileManager1 --type=method_call /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:"$dir" string:""
         echo "[Rip] Done"
     else
         echo "[Rip] Something went wrong"
