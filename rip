@@ -54,7 +54,7 @@ downloadVideo() {
 1
 testSuccess() {
     if [[ $1 -eq 0 ]]; then
-        nautilus ./$2
+        nohup nautilus ./$2 2>&1 &
         if [[ $? -ne 0 ]]; then
             xdg-open .
         fi
