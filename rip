@@ -45,17 +45,19 @@ downloadVideo() {
     mkdir ./$websiteName 2>/dev/null
     cd ./$websiteName
     echo "[Rip] Grabbing Title"
-    local title=$(yt-dlp "$link" --skip-download --print title)
+    local title=$(yt-dlp $args -f "$config" "$link" --skip-download --restrict-filenames --print filename)
     echo "[Rip] Downloading: $title..."
-    yt-dlp $args -f "$config" "$link"
+    yt-dlp $args -f "$config" "$link" --restrict-filenames
     testSuccess $? "$title"
     exit
 }
-
+1
 testSuccess() {
     if [[ $1 -eq 0 ]]; then
-        local dir=$(ls $(pwd)/"$2"*)
-        dbus-send --session --dest=org.freedesktop.FileManager1 --type=method_call /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:"$dir" string:""
+        nautilus ./$2
+        if [[ $? -ne 0 ]]; then
+            xdg-open .
+        fi
         echo "[Rip] Done"
     else
         echo "[Rip] Something went wrong"
