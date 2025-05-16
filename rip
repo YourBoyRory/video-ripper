@@ -3,12 +3,14 @@
 getFolder() {
     if [[ "$1" == "mp3" ]]; then
         link=$2
+        ext="mp3"
         echo "[Rip] mp3 mode"
         args="-x --audio-format mp3"
         cd ~/Music/
     else
         link=$1
-        args=""
+        ext="mp4"
+        args="--recode mp4"
         cd ~/Videos/
     fi
 }
@@ -37,7 +39,7 @@ loadConfig() {
         config="$(head $file)"
     else
         echo "[Rip] No config for $fullDomain, loading generic config"
-        config="bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
+        config="bv*[vcodec^=avc]+ba[ext=m4a]/b[ext=mp4]/b"
     fi
 }
 
@@ -45,10 +47,10 @@ downloadVideo() {
     mkdir ./$websiteName 2>/dev/null
     cd ./$websiteName
     echo "[Rip] Grabbing Title"
-    local title=$(yt-dlp $args -f "$config" "$link" --skip-download --restrict-filenames --print filename)
+    local title=$(yt-dlp $args -f "$config" "$link" --skip-download --restrict-filenames -o "%(title)s-[%(id)s]" --print filename)
     echo "[Rip] Downloading: $title..."
-    yt-dlp $args -f "$config" "$link" --restrict-filenames
-    testSuccess $? "$title"
+    yt-dlp $args -f "$config" "$link" --restrict-filenames -o "%(title)s-[%(id)s]"
+    testSuccess $? "$title.$ext"
     exit
 }
 1
