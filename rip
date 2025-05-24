@@ -6,11 +6,13 @@ getFolder() {
         ext="mp3"
         echo "[Rip] mp3 mode"
         args="-x --audio-format mp3"
+        stream_options=""
         cd ~/Music/
     else
         link=$1
         ext="mp4"
-        args="--recode mp4"
+        args='--use-postprocessor FFmpegCopyStream --ppa CopyStream:'
+        stream_options="-c:v libx264 -c:a aac -f mp4"
         cd ~/Videos/
     fi
 }
@@ -32,25 +34,14 @@ parseLink() {
     echo "[Rip] $websiteName Video"
 }
 
-loadConfig() {
-    file="~/.config/video-ripper/$fullDomain.config"
-    if test -f "$file"; then
-        echo "[Rip] Loading config for $fullDomain"
-        config="$(head $file)"
-    else
-        echo "[Rip] No config for $fullDomain, loading generic config"
-        config="bv*[vcodec^=avc]+ba[ext=m4a]/b[ext=mp4]/b"
-    fi
-}
-
 downloadVideo() {
     mkdir ./$websiteName 2>/dev/null
     cd ./$websiteName
     echo "[Rip] Grabbing Title"
-    local title=$(yt-dlp $args -f "$config" "$link" --skip-download --restrict-filenames -o "%(title)s-[%(id)s]" --print filename)
+    local title=$(yt-dlp "$link" --skip-download --restrict-filenames -o "%(title)s-[%(id)s]" --print filename)
     echo "[Rip] Downloading: $title..."
-    yt-dlp $args -f "$config" "$link" --restrict-filenames -o "%(title)s-[%(id)s]"
-    testSuccess $? "$title.$ext"
+    yt-dlp $args"$stream_options" "$link" --restrict-filenames -o "%(title)s-[%(id)s]"
+    testSuccess $? "$title.$ext" "$link"
     exit
 }
 1
@@ -62,12 +53,12 @@ testSuccess() {
         fi
         echo "[Rip] Done"
     else
-        echo "[Rip] Something went wrong"
+        echo -e "[Rip]\e[31m Something went wrong:\e[0m"
+        yt-dlp $3 --list-formats
     fi
 }
 
 # main
 getFolder $1 $2
 parseLink
-loadConfig
 downloadVideo
