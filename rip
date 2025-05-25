@@ -5,12 +5,14 @@ getFolder() {
         link=$2
         ext="mp3"
         echo "[Rip] mp3 mode"
+        download_options="bestaudio"
         args="-x --audio-format mp3"
         stream_options=""
         cd ~/Music/
     else
         link=$1
         ext="mp4"
+        download_options="bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
         args='--use-postprocessor FFmpegCopyStream --ppa CopyStream:'
         stream_options="-c:v libx264 -c:a aac -f mp4"
         cd ~/Videos/
@@ -40,7 +42,7 @@ downloadVideo() {
     echo "[Rip] Grabbing Title"
     local title=$(yt-dlp "$link" --skip-download --restrict-filenames -o "%(title)s-[%(id)s]" --print filename)
     echo "[Rip] Downloading: $title..."
-    yt-dlp $args"$stream_options" "$link" --restrict-filenames -o "%(title)s-[%(id)s]"
+    yt-dlp $args"$stream_options" -f "$download_options" "$link" --restrict-filenames -o "%(title)s-[%(id)s]"
     testSuccess $? "$title.$ext" "$link"
     exit
 }
