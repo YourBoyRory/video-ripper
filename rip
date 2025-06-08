@@ -9,6 +9,13 @@ getFolder() {
         args="-x --audio-format mp3"
         stream_options=""
         cd ~/Music/
+    elif [[ "$1" == "fast" ]]; then
+        link=$2
+        ext="mp4"
+        download_options="bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
+        args='--use-postprocessor FFmpegCopyStream --ppa CopyStream:'
+        stream_options="-c:v libx264 -tune zerolatency -preset ultrafast -c:a aac -f mp4"
+        cd ~/Videos/
     else
         link=$1
         ext="mp4"
