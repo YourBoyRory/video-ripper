@@ -3,20 +3,38 @@
 getFolder() {
     if [[ "$1" == "mp3" ]]; then
         link=$2
+        profile="mp3"
         ext="mp3"
         echo "[Rip] mp3 mode"
         download_options="bestaudio"
         args="-x --audio-format mp3"
         stream_options=""
         cd ~/Music/
+    elif [[ "$1" == "mp3-android" ]]; then
+        link=$2
+        profile="mp3-android"
+        ext="mp3"
+        echo "[Rip] mp3 mode"
+        download_options="bestaudio"
+        args="-x --audio-format mp3"
+        stream_options=""
+    elif [[ "$1" == "fast-android" ]]; then
+        link=$2
+        profile="fast-android"
+        ext="mp4"
+        download_options="bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
+        args='--use-postprocessor FFmpegCopyStream --ppa CopyStream:'
+        stream_options="-c:v libx264 -tune zerolatency -preset ultrafast -c:a aac -f mp4"
     elif [[ "$1" == "fast" ]]; then
         link=$2
+        profile="fast"
         ext="mp4"
         download_options="bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
         args='--use-postprocessor FFmpegCopyStream --ppa CopyStream:'
         stream_options="-c:v libx264 -tune zerolatency -preset ultrafast -c:a aac -f mp4"
         cd ~/Videos/
     else
+        profile="video"
         link=$1
         ext="mp4"
         download_options="bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
@@ -56,26 +74,28 @@ downloadVideo() {
 
 testSuccess() {
     if [[ $1 -eq 0 ]]; then
-        if command -v nautilus &>/dev/null; then
-            echo "[Rip] Found Nautilus"
-            nohup nautilus --select ./$2 > /dev/null 2>&1 &
-        elif command -v dolphin &>/dev/null; then
-            echo "[Rip] Found Dolphin"
-            nohup dolphin --select ./$2 > /dev/null 2>&1 &
-        elif command -v nemo &>/dev/null; then
-            echo "[Rip] Found Nemo"
-            nohup nemo --no-desktop --browser --select ./$2 > /dev/null 2>&1 &
-        elif command -v thunar &>/dev/null; then
-            echo "[Rip] Found Thunar"
-            nohup thunar "$(dirname ./$2)" > /dev/null 2>&1 &
-        else
-            echo "[Rip] Fallback file browser"
-            nohup xdg-open . > /dev/null 2>&1 &
-        fi
-        if [[ $? -ne 0 ]]; then
-            echo "[Rip] Error when opening file browser with nohup"
-            echo "[Rip] Fallback file browser"
-            xdg-open .
+        if [[ "$profile" != *"android"* ]]; then
+            if command -v nautilus &>/dev/null; then
+                echo "[Rip] Found Nautilus"
+                nohup nautilus --select ./$2 > /dev/null 2>&1 &
+            elif command -v dolphin &>/dev/null; then
+                echo "[Rip] Found Dolphin"
+                nohup dolphin --select ./$2 > /dev/null 2>&1 &
+            elif command -v nemo &>/dev/null; then
+                echo "[Rip] Found Nemo"
+                nohup nemo --no-desktop --browser --select ./$2 > /dev/null 2>&1 &
+            elif command -v thunar &>/dev/null; then
+                echo "[Rip] Found Thunar"
+                nohup thunar "$(dirname ./$2)" > /dev/null 2>&1 &
+            else
+                echo "[Rip] Fallback file browser"
+                nohup xdg-open . > /dev/null 2>&1 &
+            fi
+            if [[ $? -ne 0 ]]; then
+                echo "[Rip] Error when opening file browser with nohup"
+                echo "[Rip] Fallback file browser"
+                xdg-open .
+            fi
         fi
         echo "[Rip] Done"
     else
