@@ -14,7 +14,7 @@ getFolder() {
         ext="mp4"
         download_options="bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
         args='--use-postprocessor FFmpegCopyStream --ppa CopyStream:'
-        stream_options="-c:v libx264 -c:a aac -f mp4"
+        stream_options="-c:v libx264 -c:a aac -f mkv"
         cd ~/Videos/
     fi
 }
@@ -46,17 +46,34 @@ downloadVideo() {
     testSuccess $? "$title.$ext" "$link"
     exit
 }
-1
+
 testSuccess() {
     if [[ $1 -eq 0 ]]; then
-        nohup nautilus ./$2 2>&1 &
+        if command -v nautilus &>/dev/null; then
+            echo "[Rip] Found Nautilus"
+            nohup nautilus --select ./$2 > /dev/null 2>&1 &
+        elif command -v dolphin &>/dev/null; then
+            echo "[Rip] Found Dolphin"
+            nohup dolphin --select ./$2 > /dev/null 2>&1 &
+        elif command -v nemo &>/dev/null; then
+            echo "[Rip] Found Nemo"
+            nohup nemo --no-desktop --browser --select ./$2 > /dev/null 2>&1 &
+        elif command -v thunar &>/dev/null; then
+            echo "[Rip] Found Thunar"
+            nohup thunar "$(dirname ./$2)" > /dev/null 2>&1 &
+        else
+            echo "[Rip] Fallback file browser"
+            nohup xdg-open . > /dev/null 2>&1 &
+        fi
         if [[ $? -ne 0 ]]; then
+            echo "[Rip] Error when opening file browser with nohup"
+            echo "[Rip] Fallback file browser"
             xdg-open .
         fi
         echo "[Rip] Done"
     else
-        echo -e "[Rip]\e[31m Something went wrong:\e[0m"
-        yt-dlp $3 --list-formats
+        echo -e "[Rip]\e[31m Something went wrong\e[0m"
+        #yt-dlp $3 --list-formats
     fi
 }
 
